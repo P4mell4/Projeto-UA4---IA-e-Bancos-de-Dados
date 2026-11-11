@@ -1,0 +1,92 @@
+from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams
+from qdrant_client.models import Distance
+from qdrant_client.models import PointStruct
+
+from sentence_transformers import SentenceTransformer
+
+import datetime
+
+client = QdrantClient(
+host="localhost",
+port=6333
+)
+
+model = SentenceTransformer(
+"sentence-transformers/all-MiniLM-L6-v2"
+)
+
+COLLECTION = "ua4_reviews_semantic"
+
+client.recreate_collection(
+collection_name=COLLECTION,
+vectors_config=VectorParams(
+size=384,
+distance=Distance.COSINE
+)
+)
+
+reviews = [
+
+{
+"id":"r1",
+"text":"A bateria dura muito e a câmera é ótima!"
+},
+
+{
+"id":"r2",
+"text":"Gostei do desempenho, mas o preço é alto."
+},
+
+{
+"id":"r3",
+"text":"A bateria acaba rápido e o aquecimento incomoda."
+}
+
+]
+
+embeddings = model.encode(
+[r["text"] for r in reviews]
+).tolist()
+
+points=[]
+
+for i,r in enumerate(reviews):
+
+```
+points.append(
+
+    PointStruct(
+
+        id=i+1,
+
+        vector=embeddings[i],
+
+        payload={
+
+            "review_id":r["id"],
+            "text":r["text"],
+            "source":"mongo_simulado",
+            "lang":"pt-BR",
+
+            "embedding_model":
+            "all-MiniLM-L6-v2",
+
+            "embedding_dim":384,
+
+            "timestamp":
+            datetime.datetime.utcnow().isoformat()
+
+        }
+
+    )
+
+)
+```
+
+client.upsert(
+collection_name=COLLECTION,
+points=points
+)
+
+print("Coleção criada com sucesso.")

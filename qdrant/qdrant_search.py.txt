@@ -1,0 +1,38 @@
+from qdrant_client import QdrantClient
+
+from sentence_transformers import SentenceTransformer
+
+client = QdrantClient(
+host="localhost",
+port=6333
+)
+
+model = SentenceTransformer(
+"sentence-transformers/all-MiniLM-L6-v2"
+)
+
+query = "problemas de bateria e aquecimento"
+
+vector = model.encode(query).tolist()
+
+hits = client.search(
+
+```
+collection_name="ua4_reviews_semantic",
+
+query_vector=vector,
+
+limit=3
+```
+
+)
+
+for hit in hits:
+
+```
+print(hit.score)
+
+print(hit.payload["text"])
+
+print("-----------")
+```
